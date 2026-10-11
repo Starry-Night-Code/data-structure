@@ -1,22 +1,24 @@
 #include<iostream>
+#include<cassert>
 
 template<typename T>
 class List;
 
 template<typename T>
-class ListNode // 列表结点类
+class ListNode // 单向列表结点类
 {
     public:
         ListNode();
         ListNode(T data, ListNode *next=NULL);
         friend class List;
+        friend class List2;
     protected:
         T data;
         ListNode *next; // 类的自引用，指针方式
 };
 
 template<typename T>
-ListNode<T>::ListNode()
+ListNode<T>::ListNode():next(NULL)
 {}
 
 template<typename T>
@@ -25,25 +27,60 @@ ListNode<T>::ListNode(T data, ListNode<T> *next): data(data), next(next)
 
 
 template<typename T>
-class List // 单向列表类, 直接使用列表结点类的数据和操作
+class List // 不带表头节点的单向链表类
 {
     protected:
-        ListNode<T>* first; //表头指针
+        ListNode<T>* first; // 表头指针、不分配结点内存
     public:
-        List(); // 构造函数分配节点内存
+        List();
+        void insertAsFirst(T const& e);
+        T removeFirst();
+};
+
+template<typename T>
+List<T>::List():first(NULL)
+{}
+
+template<typename T>
+void List<T>::insertAsFirst(T const& e)
+{
+    ListNode<T> *newNode = new ListNode(T const& e)
+    newNode->next = first;
+    first = newNode;
+}
+
+template<typename T>
+T List<T>::removeFirst()
+{
+    assert(first != NULL);
+    T e = first->data;
+    ListNode *del = first;
+    first = first->next;
+    delete del;
+    return e;
+}
+
+
+template<typename T>
+class List2 // 带表头节点的单向列表类, 直接使用列表结点类的数据和操作
+{
+    protected:
+        ListNode<T>* first; // 表头指针
+    public:
+        List2(); // 构造函数分配节点内存
         bool Insert (int i, T &x);
         ListNode<T> *Locate (int i);
         bool Remove (int i, T& x );
 };
 
 template<typename T>
-List<T>::List()
+List2<T>::List2()
 {
     first =  new ListNode;
 }
 
 template<typename T>
-bool List<T>::Insert (int i, T& x) // 将新元素x插入在链表中第 i 个结点之后
+bool List2<T>::Insert (int i, T& x) // 将新元素x插入在链表中第 i 个结点之后
 {
     ListNode* current = Locate(i);
     if (current == NULL) return false; // 无插入位置
@@ -54,7 +91,7 @@ bool List<T>::Insert (int i, T& x) // 将新元素x插入在链表中第 i 个�
 } // 在第 i 个结点之后插入, 只需定位第 i 个结点，i=0则插在表头结点之后，作为新的首元。
 
 template<typename T>
-ListNode<T>* List<T>::Locate (int i) // 函数返回表中第 i 个元素的地址，若i<0或i超出表中结点个数，则返回NULL。i=0返回表头结点地址
+ListNode<T>* List2<T>::Locate (int i) // 函数返回表中第 i 个元素的地址，若i<0或i超出表中结点个数，则返回NULL。i=0返回表头结点地址
 {
     if (i < 0) return NULL; // i不合理
     ListNode* current = first; int k = 0; // 见下
@@ -65,7 +102,7 @@ ListNode<T>* List<T>::Locate (int i) // 函数返回表中第 i 个元素的地�
  // 考察 i=0 情形如何，插入和删除有时需要定位i=0或i-1
 
 template<typename T>
-bool List<T>::Remove (int i, T& x ) // 删除链表第i个元素, 通过引用参数x返回元素值
+bool List2<T>::Remove (int i, T& x ) // 删除链表第i个元素, 通过引用参数x返回元素值
 {
     ListNode* current = Locate(i-1);
     if ( current == NULL)
@@ -81,7 +118,7 @@ bool List<T>::Remove (int i, T& x ) // 删除链表第i个元素, 通过引用�
 typedef int Rank; // 秩
 #define ListNodePosi(T) ListNode2<T>* // 列表节点位置
 template <typename T>
-class ListNode2 // 列表节点模板类（以双向链表形式实现）
+class ListNode2 // 双向列表节点模板类（以双向链表形式实现）
 {
     protected:
         T data; ListNodePosi(T) pred; ListNodePosi(T) succ; // 数值、前驱、后继
@@ -110,7 +147,7 @@ class ListNode2 // 列表节点模板类（以双向链表形式实现）
 template <typename T>
 ListNodePosi(T) ListNode2<T>::insertAsPred ( T const& e )
 {
-    ListNodePosi(T) x = new ListNode ( e, pred, this ); // 创建新节点
+    ListNodePosi(T) x = new ListNode2( e, pred, this ); // 创建新节点
     pred->succ = x; pred = x; // 设置正向链接
     return x; // 返回新节点的位置
 }
@@ -118,17 +155,14 @@ ListNodePosi(T) ListNode2<T>::insertAsPred ( T const& e )
 template<typename T>
 ListNodePosi(T) ListNode2<T>::insertAsSucc(T const& e)
 {
-    ListNode2 *newNode = new ListNode2(e);
-    newNode->succ = succ;
-    succ->pred = newNode;
-    succ = newNode;
-    newNode->pred = this;
-    return newNode;
+    ListNodePosi(T) x = new ListNode2( e, this, succ ); // 创建新节点
+    succ->pred = x; succ = x; // 设置正向链接
+    return x; // 返回新节点的位置
 }
 
 
 template <typename T>
-class List2 // 列表模板类
+class List3 // 带头尾节点的双向列表模板类
 {
     private: // 规模、头哨兵、尾哨兵
         int _size; ListNodePosi(T) header; ListNodePosi(T) trailer;
@@ -138,12 +172,12 @@ class List2 // 列表模板类
         void copyNodes ( ListNodePosi(T) p, int n); // 复制列表中自位置p起的n项
     public:
         // 构造函数
-        List2() { init(); } // 默认
-        List2 ( List<T> const& L); // 整体复制列表L
-        List2 ( List<T> const& L, Rank r, int n); // 复制列表L中自第r项起的n项
-        List2 ( ListNodePosi(T) p, int n); // 复制列表中自位置p起的n项
+        List3() { init(); } // 默认
+        List3 ( List<T> const& L); // 整体复制列表L
+        List3 ( List<T> const& L, Rank r, int n); // 复制列表L中自第r项起的n项
+        List3 ( ListNodePosi(T) p, int n); // 复制列表中自位置p起的n项
         // 析构函数
-        ~List2(); // 释放（包含头、尾哨兵在内的）所有节点
+        ~List3(); // 释放（包含头、尾哨兵在内的）所有节点
         // 逐个删除，复杂度O(n)，线性正比于列表的规模
         T & operator[](Rank r)const;
         ListNodePosi(T) insertAsFirst ( T const& e );
@@ -172,7 +206,7 @@ class List2 // 列表模板类
 };
 
 template <typename T>
-void List2<T>::init() // 列表初始化，在创建列表对象时统一调用
+void List3<T>::init() // 列表初始化，在创建列表对象时统一调用
 {
     header = new ListNode<T>; // 创建头哨兵节点
     trailer = new ListNode<T>; // 创建尾哨兵节点
@@ -183,7 +217,7 @@ void List2<T>::init() // 列表初始化，在创建列表对象时统一调用
 
 template <typename T>
 // 重载下标操作符，以通过秩直接访问列表节点（虽方便，效率低，需慎用）
-T& List2<T>::operator[] ( Rank r ) const
+T& List3<T>::operator[] ( Rank r ) const
 {
     ListNodePosi(T) p = first(); // 从首节点出发
     while ( 0 < r-- ) p = p->succ; // 顺数第r个节点即是
@@ -191,22 +225,22 @@ T& List2<T>::operator[] ( Rank r ) const
 }
 
 template <typename T>
-ListNodePosi(T) List2<T>::insertAsFirst ( T const& e )
+ListNodePosi(T) List3<T>::insertAsFirst ( T const& e )
 { _size++; return header->insertAsSucc (e); } // e当作首节点插入
 
 template <typename T>
-ListNodePosi(T) List2<T>::insertAsLast ( T const& e )
+ListNodePosi(T) List3<T>::insertAsLast ( T const& e )
 { _size++; return trailer->insertAsPred (e); } // e当作末节点插入
 
 template <typename T>
-ListNodePosi(T) List2<T>::insertA ( ListNodePosi(T) p, T const& e )
+ListNodePosi(T) List3<T>::insertA ( ListNodePosi(T) p, T const& e )
 { _size++; return p->insertAsSucc (e); } // e当作p的后继插入（After）
 
 template <typename T>
-ListNodePosi(T) List2<T>::insertB ( ListNodePosi(T) p, T const& e )
+ListNodePosi(T) List3<T>::insertB ( ListNodePosi(T) p, T const& e )
 { _size++; return p->insertAsPred (e); } // e当作p的前驱插入（Before）
 
-template <typename T> T List2<T>::remove ( ListNodePosi(T) p )
+template <typename T> T List3<T>::remove ( ListNodePosi(T) p )
 {
     T e = p->data; // 备份待删除节点的数值（假定T类型可直接赋值）
     p->pred->succ = p->succ; p->succ->pred = p->pred; // 后继、前驱
@@ -215,7 +249,7 @@ template <typename T> T List2<T>::remove ( ListNodePosi(T) p )
 }
 
 template <typename T>
-List2<T>::~List2() // 列表析构器
+List3<T>::~List3() // 列表析构器
 {
     int oldSize = _size;
     while ( 0 < _size ) remove ( header->succ );
@@ -225,7 +259,7 @@ List2<T>::~List2() // 列表析构器
 } // 清空列表，释放头、尾哨兵节点
 
 template <typename T>
-ListNodePosi(T) List2<T>::find (T const& e, int n, ListNodePosi(T)p) const // 在无序列表内节点p（可能是trailer）的n个（真）前驱中，找到等于e的最后者
+ListNodePosi(T) List3<T>::find (T const& e, int n, ListNodePosi(T)p) const // 在无序列表内节点p（可能是trailer）的n个（真）前驱中，找到等于e的最后者
 {
     while ( 0 < n-- ) // 对于p的最近的n个前驱，从右向左
         if(e==(p=p->pred)->data) return p; // 逐个比对直至命中或越界
@@ -233,13 +267,13 @@ ListNodePosi(T) List2<T>::find (T const& e, int n, ListNodePosi(T)p) const // �
 } // 失败时，返回NULL
 
 template<typename T>
-bool List2<T>::valid(ListNodePosi(T) p)const
+bool List3<T>::valid(ListNodePosi(T) p)const
 {
     return p && (p != header) && (p != trailer);
 }
 
 template <typename T>
-ListNodePosi(T) List2<T>::search ( T const& e, int n, ListNodePosi(T) p ) const
+ListNodePosi(T) List3<T>::search ( T const& e, int n, ListNodePosi(T) p ) const
 {
     while ( 0 <= n-- ) // 对于p的最近的n个前驱，从右向左逐个比较
         if (((p=p->pred)->data)<=e) break; // assert: 至此位置p必符合输出语义约定——尽管此前最后一次关键码比较可能没有意义（等效于与-inf比较）
@@ -247,7 +281,7 @@ ListNodePosi(T) List2<T>::search ( T const& e, int n, ListNodePosi(T) p ) const
 } // 失败时，返回区间左边界的前驱（可能是header),可通过valid()判断成功与否
 
 template <typename T>
-int List2<T>::deduplicate() // 剔除无序列表中的重复节点
+int List3<T>::deduplicate() // 剔除无序列表中的重复节点
 {
     if ( _size < 2 ) return 0; // 平凡列表自然无重复
     int oldSize = _size; // 记录原规模
@@ -262,7 +296,7 @@ int List2<T>::deduplicate() // 剔除无序列表中的重复节点
 }
 
 template <typename T>
-int List2<T>::uniquify() // 成批剔除重复元素，效率更高
+int List3<T>::uniquify() // 成批剔除重复元素，效率更高
 {
     if ( _size < 2 ) return 0; // 平凡列表自然无重复
     int oldSize = _size; // 记录原规模
@@ -275,7 +309,7 @@ int List2<T>::uniquify() // 成批剔除重复元素，效率更高
 }
 
 template <typename T>
-void List2<T>::insertionSort ( ListNodePosi(T) p, int n ) // 列表的插入排序算法：对起始于位置p的n个元素排序
+void List3<T>::insertionSort ( ListNodePosi(T) p, int n ) // 列表的插入排序算法：对起始于位置p的n个元素排序
 {
     for ( int r = 0; r < n; r++ )
     {
@@ -286,7 +320,7 @@ void List2<T>::insertionSort ( ListNodePosi(T) p, int n ) // 列表的插入排�
 }
 
 template<typename T>
-ListNodePosi(T) List2<T>::selectMax(ListNodePosi(T) p, int n)const
+ListNodePosi(T) List3<T>::selectMax(ListNodePosi(T) p, int n)const
 {
     ListNodePosi(T) max = p;
     for(int i = 1; i < n; i++)
@@ -299,7 +333,7 @@ ListNodePosi(T) List2<T>::selectMax(ListNodePosi(T) p, int n)const
 }
 
 template <typename T>
-void List2<T>::selectionSort ( ListNodePosi(T) p, int n ) // 列表的选择排序算法：对起始于位置p的n个元素排序
+void List3<T>::selectionSort ( ListNodePosi(T) p, int n ) // 列表的选择排序算法：对起始于位置p的n个元素排序
 {
     ListNodePosi(T) head = p->pred; ListNodePosi(T) tail = p;
     for ( int i = 0; i < n; i++ ) tail = tail->succ;
@@ -316,7 +350,7 @@ void List2<T>::selectionSort ( ListNodePosi(T) p, int n ) // 列表的选择排�
 }
 
 template <typename T>
-void List2<T>::merge ( ListNodePosi(T) & p, int n, List<T>& L, ListNodePosi(T) q, int m ) // 有序列表的归并：当前列表中自p起的n个元素，与列表L中自q起的m个元素归并
+void List3<T>::merge ( ListNodePosi(T) & p, int n, List<T>& L, ListNodePosi(T) q, int m ) // 有序列表的归并：当前列表中自p起的n个元素，与列表L中自q起的m个元素归并
 {
     ListNodePosi(T) pp = p->pred;
     // 借助前驱（可能是header），以便返回前 ...
@@ -332,7 +366,7 @@ void List2<T>::merge ( ListNodePosi(T) & p, int n, List<T>& L, ListNodePosi(T) q
 }
 
 template <typename T>
-void List2<T>::mergeSort ( ListNodePosi(T) & p, int n ) // 列表的归并排序算法：对起始于位置p的n个元素排序
+void List3<T>::mergeSort ( ListNodePosi(T) & p, int n ) // 列表的归并排序算法：对起始于位置p的n个元素排序
 {
     if ( n < 2 ) return; // 若待排序范围已足够小，则直接返回；否则...
     int m = n >> 1; // 以中点为界

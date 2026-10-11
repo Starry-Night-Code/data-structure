@@ -91,7 +91,7 @@ class Vector
     // 每步迭代复杂度 O(n)，总体复杂度 O(n2)
     template <typename VST>
     void traverse ( VST& visit ); // 借助函数对象机制实现向量遍历
-    friend class Increase; // 允许Increase类访问本类的私有成员
+    friend class Increase<T>; // 允许Increase类访问本类的私有成员
     void increase(Vector<T> &V); // 递增向量中各元素
     // 复杂度为 O(n)
     int disordered() const; // 判序，返回向量中逆序相邻元素对的总数
@@ -278,8 +278,8 @@ void Vector<T>::insertSort(Rank lo, Rank hi)
             _elem[i + 1] = _elem[i]; // 大于新插入元素则往后移
             i--;
         }
+        _elem[i + 1] = key; //插入新元素
     }
-    _elem[i + 1] = key; //插入新元素
 }
 
 template <typename T>
