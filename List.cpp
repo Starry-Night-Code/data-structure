@@ -1,20 +1,31 @@
-#include<iostream>
+#include<cstdio>
 #include<cassert>
 
 template<typename T>
 class List;
 
 template<typename T>
+class List2;
+
+template<typename T>
 class ListNode // 单向列表结点类
 {
     public:
         ListNode();
-        ListNode(T data, ListNode *next=NULL);
-        friend class List;
-        friend class List2;
+        ListNode(T data, ListNode<T> *next=NULL);
+        friend class List<T>;
+        friend class List2<T>;
+        T getData()const
+        {
+            return data;
+        }
+        ListNode<T> * getNext()const
+        {
+            return next;
+        }
     protected:
         T data;
-        ListNode *next; // 类的自引用，指针方式
+        ListNode<T> *next; // 类的自引用，指针方式
 };
 
 template<typename T>
@@ -44,7 +55,7 @@ List<T>::List():first(NULL)
 template<typename T>
 void List<T>::insertAsFirst(T const& e)
 {
-    ListNode<T> *newNode = new ListNode(T const& e)
+    ListNode<T> *newNode = new ListNode<T>(e);
     newNode->next = first;
     first = newNode;
 }
@@ -54,7 +65,7 @@ T List<T>::removeFirst()
 {
     assert(first != NULL);
     T e = first->data;
-    ListNode *del = first;
+    ListNode<T> *del = first;
     first = first->next;
     delete del;
     return e;
@@ -76,15 +87,15 @@ class List2 // 带表头节点的单向列表类, 直接使用列表结点类的
 template<typename T>
 List2<T>::List2()
 {
-    first =  new ListNode;
+    first =  new ListNode<T>;
 }
 
 template<typename T>
 bool List2<T>::Insert (int i, T& x) // 将新元素x插入在链表中第 i 个结点之后
 {
-    ListNode* current = Locate(i);
+    ListNode<T>* current = Locate(i);
     if (current == NULL) return false; // 无插入位置
-    ListNode* newNode = new ListNode(x); // 创建新结点
+    ListNode<T>* newNode = new ListNode<T>(x); // 创建新结点
     newNode->next = current->next; // 链入, 核心操作
     current->next = newNode;
     return true; // 插入成功
@@ -94,7 +105,7 @@ template<typename T>
 ListNode<T>* List2<T>::Locate (int i) // 函数返回表中第 i 个元素的地址，若i<0或i超出表中结点个数，则返回NULL。i=0返回表头结点地址
 {
     if (i < 0) return NULL; // i不合理
-    ListNode* current = first; int k = 0; // 见下
+    ListNode<T>* current = first; int k = 0; // 见下
     while (current != NULL && k < i )
     { current = current->next;k++; }
     return current; // 返回第 i 号结点地址或NULL
@@ -104,16 +115,19 @@ ListNode<T>* List2<T>::Locate (int i) // 函数返回表中第 i 个元素的地
 template<typename T>
 bool List2<T>::Remove (int i, T& x ) // 删除链表第i个元素, 通过引用参数x返回元素值
 {
-    ListNode* current = Locate(i-1);
+    ListNode<T>* current = Locate(i-1);
     if ( current == NULL)
         return false; //表中无第i个元素，无法删除
-    ListNode* del = current->next; //核心操作
+    ListNode<T>* del = current->next; //核心操作
     current->next = del->next;
     x = del->data;
     delete del;
     return true;
 } // 删除第i个结点, 需定位第i-1个结点
 
+
+template<typename T>
+class List3;
 
 typedef int Rank; // 秩
 #define ListNodePosi(T) ListNode2<T>* // 列表节点位置
@@ -128,7 +142,7 @@ class ListNode2 // 双向列表节点模板类（以双向链表形式实现）
         ListNode2 ( T e, ListNodePosi(T) p = NULL, ListNodePosi(T) s = NULL ): data ( e ), pred ( p ), succ ( s )
         {} //默认构造器
         // 操作接口
-        T getData()
+        T getData()const
         {
             return data;
         }
@@ -142,12 +156,13 @@ class ListNode2 // 双向列表节点模板类（以双向链表形式实现）
         }
         ListNodePosi(T) insertAsPred(T const& e); //紧靠当前节点之前插入新节点
         ListNodePosi(T) insertAsSucc(T const& e); //紧随当前节点之后插入新节点
+        friend class List3<T>;
 };
 
 template <typename T>
 ListNodePosi(T) ListNode2<T>::insertAsPred ( T const& e )
 {
-    ListNodePosi(T) x = new ListNode2( e, pred, this ); // 创建新节点
+    ListNodePosi(T) x = new ListNode2<T>( e, pred, this ); // 创建新节点
     pred->succ = x; pred = x; // 设置正向链接
     return x; // 返回新节点的位置
 }
@@ -155,7 +170,7 @@ ListNodePosi(T) ListNode2<T>::insertAsPred ( T const& e )
 template<typename T>
 ListNodePosi(T) ListNode2<T>::insertAsSucc(T const& e)
 {
-    ListNodePosi(T) x = new ListNode2( e, this, succ ); // 创建新节点
+    ListNodePosi(T) x = new ListNode2<T>( e, this, succ ); // 创建新节点
     succ->pred = x; succ = x; // 设置正向链接
     return x; // 返回新节点的位置
 }
@@ -203,13 +218,21 @@ class List3 // 带头尾节点的双向列表模板类
         // 将一有序列表L中起始于节点q,长度为m的子序列，与当前有序列表中起始于节点p，长度为n的子列表做二路归并。复杂度O（m+n）
         void mergeSort ( ListNodePosi(T) & p, int n );  // 归并排序
         // 复杂度为 O(nlogn)
+        ListNodePosi(T) first() const
+        {
+            return header->succ;
+        }
+        ListNodePosi(T) last() const
+        {
+            return trailer->pred;
+        }
 };
 
 template <typename T>
 void List3<T>::init() // 列表初始化，在创建列表对象时统一调用
 {
-    header = new ListNode<T>; // 创建头哨兵节点
-    trailer = new ListNode<T>; // 创建尾哨兵节点
+    header = new ListNode2<T>; // 创建头哨兵节点
+    trailer = new ListNode2<T>; // 创建尾哨兵节点
     header->succ = trailer; header->pred = NULL;
     trailer->pred = header; trailer->succ = NULL;
     _size = 0; // 记录规模

@@ -3,6 +3,8 @@ typedef int Rank; // 秩
 #include<cassert>
 #include<cstdlib>
 
+using namespace std;
+
 
 template<typename T>
 void swap(T &a, T &b) // 交换向量的两个元素
@@ -24,7 +26,7 @@ class Increase // 函数对象
 
 
 template <typename T>
-static Rank binSearch ( T* A, const T &e, Rank lo, Rank hi ) // 二分查找算法（版本A）：在有序向量的区间[lo, hi)内查找元素e，0 <= lo < hi <= _size
+static Rank binSearch1 ( T* A, const T &e, Rank lo, Rank hi ) // 二分查找算法（版本A）：在有序向量的区间[lo, hi)内查找元素e，0 <= lo < hi <= _size
 {
     while ( lo < hi ) // 每步迭代可能做两次比较判断，三个分支
     {
@@ -39,7 +41,7 @@ static Rank binSearch ( T* A, const T &e, Rank lo, Rank hi ) // 二分查找算�
 
 
 template <typename T>
-static Rank binSearch ( T* A, T const& e, Rank lo, Rank hi ) // 二分查找算法（版本B）：在有序向量的区间[lo, hi)内查找元素e，0 <= lo < hi <= _size
+static Rank binSearch2 ( T* A, T const& e, Rank lo, Rank hi ) // 二分查找算法（版本B）：在有序向量的区间[lo, hi)内查找元素e，0 <= lo < hi <= _size
 {
     while ( 1 < hi - lo ) // 每步迭代仅有两个分支；成功查找不能提前终止
     {
@@ -51,7 +53,7 @@ static Rank binSearch ( T* A, T const& e, Rank lo, Rank hi ) // 二分查找算�
 
 
 template <typename T>
-static Rank binSearch ( T* A, T const& e, Rank lo, Rank hi ) // 二分查找算法（版本C）：在有序向量的区间[lo, hi)内查找元素e，0 <= lo < hi <= _size
+static Rank binSearch3 ( T* A, T const& e, Rank lo, Rank hi ) // 二分查找算法（版本C）：在有序向量的区间[lo, hi)内查找元素e，0 <= lo < hi <= _size
 {
     while ( lo < hi ) // 每步迭代仅有两个分支；成功查找不能提前终止
     {
@@ -344,7 +346,7 @@ void permute ( Vector<T>& V ) // 置乱器
     swap<T>( V[i - 1], V[rand() % i] ); // V[i - 1]与V[0, i)中某一随机元素交换
 }
 
-
+/*
 int main ()
 {
     // 外部调用
@@ -353,3 +355,4 @@ int main ()
     Vector<Vector<float>> v3; // 定义浮点型二维向量
     return 0;
 }
+*/
