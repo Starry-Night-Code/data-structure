@@ -1,6 +1,6 @@
 #include<cstdio>
 #include<algorithm>
-#include<Queue.cpp>
+#include"Queue.cpp"
 #define stature(p) ((p) ? (p)->height : -1)
 // 节点高度（宏定义封装，使得实现简便，
 // 与“空树高度为-1”的约定相统一）
@@ -144,12 +144,14 @@ class BinTree // 二叉树模板类
         BinNodePosi _root; //规模、根节点
         virtual int updateHeight ( BinNodePosi x ); //更新节点x高度
         void updateHeightAbove ( BinNodePosi x ); //更新节点x及其祖先高度
+        int balancedHeight(BinNodePosi x); // 平衡时返回高度，不平衡时返回-2
     public:
         ~BinTree() { if (0 < _size) remove(_root); } // 析构函数
         int size() const { return _size; } //规模
         bool empty() const { return !_root; } //判空
         BinNodePosi root() const { return _root; } //树根
         int height(BinNodePosi x);
+        bool isBalance(BinNodePosi x);
         /* 子树插入、删除、分离接口 */
         BinNodePosi insertAsLC( BinNodePosi x, T const& e );
         int remove(BinNodePosi x);
@@ -207,3 +209,30 @@ int BinTree<T>::remove(BinNodePosi x) // 删除树中位置x处节点及其后�
     int n = removeAt(x); _size -= n; return n;
     // 删除子树x，更新规模，返回删除节点总数
 }
+
+template<typename T>
+int BinTree<T>::balancedHeight(BinNodePosi x)
+{
+    if(!x)
+        return -1; // 空树高度为-1，不能用-1表示不平衡
+
+    int leftHeight = balancedHeight(x->lc);
+    if(leftHeight == -2)
+        return -2;
+
+    int rightHeight = balancedHeight(x->rc);
+    if(rightHeight == -2)
+        return -2;
+
+    int diff = leftHeight - rightHeight;
+    if(diff < -1 || diff > 1)
+        return -2;
+
+    return 1 + std::max(leftHeight, rightHeight);
+}
+
+template<typename T>
+bool BinTree<T>::isBalance(BinNodePosi x)
+{
+    return balancedHeight(x) != -2;
+} // 一次后序遍历，时间复杂度O(n)，递归栈空间O(h)
