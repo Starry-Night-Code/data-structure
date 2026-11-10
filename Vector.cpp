@@ -110,6 +110,10 @@ class Vector
     // 复杂度为 O(n2)
     int uniquify(); // 有序向量的唯一化
     // 复杂度为 O(n)
+    bool empty()const
+    {
+        return !_size;
+    }
 };
 
 template <typename T>

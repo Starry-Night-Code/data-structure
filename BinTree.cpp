@@ -1,7 +1,7 @@
 #include<cstdio>
 #include<algorithm>
 #include"Queue.cpp"
-#define stature(p) ((p) ? (p)->height : -1)
+#define stature(p) ((p) ? (p)->_height : -1)
 // 节点高度（宏定义封装，使得实现简便，
 // 与“空树高度为-1”的约定相统一）
 #define BinNodePosi BinNode<T>* // 节点位置
@@ -15,8 +15,8 @@ class BinNode
     public:
         T data; // 数值
         BinNodePosi parent; // 父节点
-        BinNodePosi lc,rc; // 左、右孩子
-        int height; // 高度
+        BinNodePosi lc, *rc; // 左、右孩子
+        int _height; // 高度
         // 操作接口
         friend class BinTree<T>;
         BinNode(const T&, BinNode<T>*);
@@ -26,7 +26,7 @@ class BinNode
         BinNodePosi insertAsRC ( T const& );
         //作为当前节点的右孩子插入新节点
         BinNodePosi succ(); //当前节点直接后继(针对指定的遍历次序)
-        template <typename VST>
+        template <typename VST> // 操作器（函数对象）
         void travLevel(VST&);
         //子树层次遍历
         template <typename VST>
@@ -38,21 +38,18 @@ class BinNode
         template <typename VST>
         void travPost(VST&);
         //子树后序遍历
-        template <typename VST> // 操作器（函数对象）
-        void travLevel(VST& visit);
-        int height();
 };
 
 template<typename T>
 bool HasLChild(BinNode<T> x)
 {
-    return x->lc;
+    return x.lc;
 }
 
 template<typename T>
-bool HasLChild(BinNode<T> x)
+bool HasRChild(BinNode<T> x)
 {
-    return x->rc;
+    return x.rc;
 }
 
 
@@ -87,11 +84,12 @@ void BinNode<T>::travLevel(VST &visit) // 二叉树层次遍历算法
   // 遍历即告完成。复杂度O(n)
 
 template <typename T, typename VST>
-void travPre(BinNodePosi x, VST& visit)
+void travPre_R(BinNodePosi x, VST& visit)
 {
+    if ( !x ) return;
     visit ( x->data );
-    travPre ( x->lc, visit );
-    travPre ( x->rc, visit );
+    travPre_R ( x->lc, visit );
+    travPre_R ( x->rc, visit );
 }
 
 template <typename T, typename VST>
@@ -124,11 +122,11 @@ int BinNode<T>::size() // 以当前节点为根的子树规模
 } // 利用树的自相似，递归编程实现。易见复杂度取决于子树的总规模，为O(n)
 
 template <typename T>
-int BinNode<T>::height()
+int height(BinNodePosi x)
 {
-    if(!this) return -1;
+    if(!x) return -1;
     else
-        return 1+max(height(lc),height(rc));
+        return 1+std::max(height(x->lc),height(x->rc));
 } // 利用树的自相似，递归编程实现。易见复杂度取决于子树的总规模，为O(n)
 
 #define FromParentTo(v)                                   \
@@ -161,7 +159,7 @@ class BinTree // 二叉树模板类
 template <typename T>
 int BinTree<T>::updateHeight(BinNodePosi x) // 更新节点x高度
 {
-    return x->height = 1 + max(stature(x->lc), stature(x->rc));
+    return x->_height = 1 + std::max(stature(x->lc), stature(x->rc));
 } // stature是节点高度的宏定义，复杂度O(1)
 
 template <typename T>
@@ -189,7 +187,7 @@ int BinTree<T>::height(BinNodePosi x)
     if(!x)
         return -1;
     else
-        return 1 + max(height(x->lc),height(x->rc));
+        return 1 + std::max(height(x->lc),height(x->rc));
 } // 利用树的自相似，递归编程实现。易见复杂度取决于子树的总规模，为O(n)
 
 template <typename T>
@@ -236,3 +234,10 @@ bool BinTree<T>::isBalance(BinNodePosi x)
 {
     return balancedHeight(x) != -2;
 } // 一次后序遍历，时间复杂度O(n)，递归栈空间O(h)
+
+
+
+int main()
+{
+    return 0;
+}
